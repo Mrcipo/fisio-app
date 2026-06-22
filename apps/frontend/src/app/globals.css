@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: #f6f8f5;
+  --foreground: #17211d;
+  --muted: #66746e;
+  --border: #d9e1dc;
+  --surface: #ffffff;
+  --brand: #0f766e;
+  --brand-strong: #115e59;
+  --accent: #d97706;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 34%),
+    linear-gradient(315deg, rgba(217, 119, 6, 0.07), transparent 28%),
+    var(--background);
+  color: var(--foreground);
+  font-family: "Aptos", "Segoe UI", sans-serif;
+  @apply antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
