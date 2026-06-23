@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../lib/async-handler";
 import { HttpError } from "../lib/http-error";
+import { getJwtSecret } from "../lib/jwt";
 import { prisma } from "../lib/prisma";
 
 type JwtPayload = {
@@ -8,16 +9,6 @@ type JwtPayload = {
   email: string;
   role: string;
 };
-
-function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    throw new HttpError(500, "JWT secret is not configured");
-  }
-
-  return secret;
-}
 
 export const requireAuth = asyncHandler(async (req, _res, next) => {
   const authHeader = req.headers.authorization;

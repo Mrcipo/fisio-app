@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
+import { GoalsPanel } from "@/components/patients/goals-panel";
 import { InitialAssessmentForm } from "@/components/patients/initial-assessment-form";
+import { RehabPlansPanel } from "@/components/patients/rehab-plans-panel";
 import { PatientForm } from "@/components/patients/patient-form";
 import { SessionsPanel } from "@/components/patients/sessions-panel";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,6 @@ type PatientDetailClientProps = {
   patientId: string;
 };
 
-const sections = ["Plan de rehabilitación", "Progreso clínico"];
 
 export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
   const [hasMounted, setHasMounted] = useState(false);
@@ -225,6 +226,10 @@ export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
 
           <SessionsPanel patientId={patientId} />
 
+          <GoalsPanel patientId={patientId} />
+
+          <RehabPlansPanel patientId={patientId} />
+
           <Card>
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -238,15 +243,6 @@ export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
               </Link>
             </div>
           </Card>
-
-          {sections.map((section) => (
-            <Card key={section}>
-              <h2 className="text-lg font-semibold text-[#17211d]">{section}</h2>
-              <p className="mt-2 text-sm leading-6 text-[#66746e]">
-                Este bloque queda preparado para conectar el módulo clínico correspondiente.
-              </p>
-            </Card>
-          ))}
         </div>
 
         <Card className="h-fit">

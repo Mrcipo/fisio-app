@@ -5,7 +5,8 @@ import { createApp } from "../app";
 import { prismaMock } from "./prisma-mock";
 
 jest.mock("../lib/prisma", () => ({
-  prisma: prismaMock,
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  prisma: require("./prisma-mock").prismaMock,
 }));
 
 const app = createApp();
@@ -133,10 +134,6 @@ describe("Backend basic flows", () => {
 
   it("validates pain scale between 0 and 10", async () => {
     mockAuthenticatedUser();
-    prismaMock.patient.findUnique.mockResolvedValue({
-      id: "patient-1",
-      userId: "user-1",
-    });
 
     const response = await request(app)
       .post("/patients/patient-1/initial-assessment")
@@ -150,26 +147,26 @@ describe("Backend basic flows", () => {
     expect(response.body.error.message).toBe("Validation error");
   });
 
-  it("blocks access to another user's patient", async () => {
+  it("returns 404 when accessing another user's patient", async () => {
     mockAuthenticatedUser("user-1");
-    prismaMock.patient.findUnique.mockResolvedValue({
-      id: "patient-2",
-      userId: "user-2",
-    });
+    // findPatientForUser uses findFirst with userId in the where clause;
+    // querying with user-1's id returns null for a patient owned by user-2
+    prismaMock.patient.findFirst.mockResolvedValue(null);
 
     const response = await request(app)
       .get("/patients/patient-2")
       .set(authHeader("user-1"));
 
-    expect(response.status).toBe(403);
-    expect(response.body.error.message).toBe("You do not have access to this patient");
+    expect(response.status).toBe(404);
+    expect(response.body.error.message).toBe("Patient not found");
   });
 
   it("creates a session with performed exercises", async () => {
     mockAuthenticatedUser();
-    prismaMock.patient.findUnique.mockResolvedValue({
+    prismaMock.patient.findFirst.mockResolvedValue({
       id: "patient-1",
       userId: "user-1",
+      deletedAt: null,
     });
     prismaMock.exercise.findMany.mockResolvedValue([{ id: "exercise-1" }]);
     prismaMock.session.create.mockResolvedValue({

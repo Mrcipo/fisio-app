@@ -1,4 +1,4 @@
-import { apiClient, fetchHtml } from "./api";
+import { apiClient, fetchBlob } from "./api";
 
 export type PatientSex = "FEMALE" | "MALE" | "OTHER" | "NOT_SPECIFIED";
 
@@ -221,8 +221,10 @@ export type DashboardSummary = {
   activeGoalsCount: number;
 };
 
-export async function listPatients() {
-  return apiClient<{ patients: Patient[] }>("/patients");
+export async function listPatients(page = 1, limit = 20) {
+  return apiClient<{ patients: Patient[]; total: number; page: number; limit: number }>(
+    `/patients?page=${page}&limit=${limit}`,
+  );
 }
 
 export async function getDashboardSummary() {
@@ -285,12 +287,46 @@ export async function updateInitialAssessment(
   );
 }
 
+export type ExerciseInput = {
+  name: string;
+  description?: string;
+  bodyRegion?: BodyRegion;
+  objective?: string;
+  defaultSets?: number;
+  defaultReps?: number;
+  defaultDuration?: number;
+  defaultLoad?: string;
+  precautions?: string;
+};
+
 export async function listExercises() {
   return apiClient<{ exercises: Exercise[] }>("/exercises");
 }
 
-export async function listSessions(patientId: string) {
-  return apiClient<{ sessions: Session[] }>(`/patients/${patientId}/sessions`);
+export async function createExercise(input: ExerciseInput) {
+  return apiClient<{ exercise: Exercise }>("/exercises", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateExercise(id: string, input: Partial<ExerciseInput>) {
+  return apiClient<{ exercise: Exercise }>(`/exercises/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteExercise(id: string) {
+  return apiClient<void>(`/exercises/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function listSessions(patientId: string, page = 1, limit = 20) {
+  return apiClient<{ sessions: Session[]; total: number; page: number; limit: number }>(
+    `/patients/${patientId}/sessions?page=${page}&limit=${limit}`,
+  );
 }
 
 export async function getSession(id: string) {
@@ -324,16 +360,113 @@ export async function getProgressSummary(patientId: string) {
 }
 
 export async function openPatientReport(patientId: string) {
-  const reportHtml = await fetchHtml(`/patients/${patientId}/report`);
-  const reportWindow = window.open("", "_blank", "noopener,noreferrer");
+  const blob = await fetchBlob(`/patients/${patientId}/report`);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "informe-paciente.pdf";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
-  if (!reportWindow) {
-    throw new Error("No se pudo abrir la nueva pestaña del informe");
-  }
+export type ClinicalGoalStatus = "ACTIVE" | "ACHIEVED" | "PAUSED" | "CANCELLED";
+export type ClinicalGoalPriority = "LOW" | "MEDIUM" | "HIGH";
 
-  reportWindow.document.open();
-  reportWindow.document.write(reportHtml);
-  reportWindow.document.close();
+export type ClinicalGoal = {
+  id: string;
+  patientId: string;
+  description: string;
+  targetDate: string | null;
+  status: ClinicalGoalStatus;
+  priority: ClinicalGoalPriority;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ClinicalGoalInput = {
+  description: string;
+  targetDate?: string;
+  status?: ClinicalGoalStatus;
+  priority?: ClinicalGoalPriority;
+};
+
+export async function listGoals(patientId: string) {
+  return apiClient<{ goals: ClinicalGoal[] }>(`/patients/${patientId}/goals`);
+}
+
+export async function createGoal(patientId: string, input: ClinicalGoalInput) {
+  return apiClient<{ goal: ClinicalGoal }>(`/patients/${patientId}/goals`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateGoal(id: string, input: Partial<ClinicalGoalInput>) {
+  return apiClient<{ goal: ClinicalGoal }>(`/goals/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteGoal(id: string) {
+  return apiClient<void>(`/goals/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export type RehabPlanPhase =
+  | "ACUTE"
+  | "SUBACUTE"
+  | "STRENGTHENING"
+  | "RETURN_TO_ACTIVITY"
+  | "MAINTENANCE";
+
+export type RehabPlanStatus = "ACTIVE" | "COMPLETED" | "PAUSED" | "CANCELLED";
+
+export type RehabPlan = {
+  id: string;
+  patientId: string;
+  title: string;
+  description: string | null;
+  phase: RehabPlanPhase;
+  frequencyPerWeek: number | null;
+  status: RehabPlanStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RehabPlanInput = {
+  title: string;
+  phase: RehabPlanPhase;
+  description?: string;
+  frequencyPerWeek?: number;
+  status?: RehabPlanStatus;
+};
+
+export async function listRehabPlans(patientId: string) {
+  return apiClient<{ rehabPlans: RehabPlan[] }>(`/patients/${patientId}/rehab-plans`);
+}
+
+export async function createRehabPlan(patientId: string, input: RehabPlanInput) {
+  return apiClient<{ rehabPlan: RehabPlan }>(`/patients/${patientId}/rehab-plans`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateRehabPlan(id: string, input: Partial<RehabPlanInput>) {
+  return apiClient<{ rehabPlan: RehabPlan }>(`/rehab-plans/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteRehabPlan(id: string) {
+  return apiClient<void>(`/rehab-plans/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export async function listObjectiveAssessments(patientId: string) {

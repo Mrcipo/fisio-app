@@ -1,5 +1,8 @@
+import { existsSync } from "fs";
+import puppeteer from "puppeteer-core";
 import { asyncHandler } from "../../lib/async-handler";
 import { HttpError } from "../../lib/http-error";
+import { paginationSchema } from "../../lib/pagination";
 import {
   createPatient,
   deletePatient,
@@ -14,6 +17,28 @@ import {
   patientIdParamSchema,
   updatePatientSchema,
 } from "./patients.schemas";
+
+function findChromeExecutable(): string {
+  const envPath = process.env.CHROME_EXECUTABLE_PATH;
+  if (envPath) return envPath;
+
+  const candidates = [
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  throw new HttpError(
+    500,
+    "Chrome no encontrado. Configurá CHROME_EXECUTABLE_PATH en .env",
+  );
+}
 
 function getAuthenticatedUserId(user: Express.Request["user"]) {
   if (!user) {
@@ -33,9 +58,10 @@ export const createPatientController = asyncHandler(async (req, res) => {
 
 export const listPatientsController = asyncHandler(async (req, res) => {
   const userId = getAuthenticatedUserId(req.user);
-  const patients = await listPatients(userId);
+  const pagination = paginationSchema.parse(req.query);
+  const result = await listPatients(userId, pagination);
 
-  res.status(200).json({ patients });
+  res.status(200).json(result);
 });
 
 export const getDashboardSummaryController = asyncHandler(async (req, res) => {
@@ -58,9 +84,30 @@ export const getPatientReportController = asyncHandler(async (req, res) => {
   const patientId = Array.isArray(req.params.patientId)
     ? req.params.patientId[0]
     : req.params.patientId;
-  const reportHtml = await getPatientReport(userId, patientId);
 
-  res.status(200).type("html").send(reportHtml);
+  const reportHtml = await getPatientReport(userId, patientId);
+  const executablePath = findChromeExecutable();
+
+  const browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setContent(reportHtml, { waitUntil: "domcontentloaded" });
+    const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="informe-paciente.pdf"',
+    );
+    res.status(200).send(Buffer.from(pdfBuffer));
+  } finally {
+    await browser.close();
+  }
 });
 
 export const updatePatientController = asyncHandler(async (req, res) => {

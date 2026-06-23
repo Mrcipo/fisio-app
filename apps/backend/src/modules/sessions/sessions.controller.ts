@@ -1,5 +1,6 @@
 import { asyncHandler } from "../../lib/async-handler";
 import { HttpError } from "../../lib/http-error";
+import { paginationSchema } from "../../lib/pagination";
 import {
   createSession,
   deleteSession,
@@ -34,9 +35,10 @@ export const createSessionController = asyncHandler(async (req, res) => {
 export const listSessionsController = asyncHandler(async (req, res) => {
   const userId = getAuthenticatedUserId(req.user);
   const { patientId } = patientIdParamSchema.parse(req.params);
-  const sessions = await listSessions(userId, patientId);
+  const pagination = paginationSchema.parse(req.query);
+  const result = await listSessions(userId, patientId, pagination);
 
-  res.status(200).json({ sessions });
+  res.status(200).json(result);
 });
 
 export const getSessionByIdController = asyncHandler(async (req, res) => {

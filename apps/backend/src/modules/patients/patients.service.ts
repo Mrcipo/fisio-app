@@ -1,19 +1,16 @@
 import { Prisma } from "@prisma/client";
 import { HttpError } from "../../lib/http-error";
+import { type PaginationQuery } from "../../lib/pagination";
 import { prisma } from "../../lib/prisma";
 import type { CreatePatientInput, UpdatePatientInput } from "./patients.schemas";
 
 export async function findPatientForUser(patientId: string, userId: string) {
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
+  const patient = await prisma.patient.findFirst({
+    where: { id: patientId, userId, deletedAt: null },
   });
 
   if (!patient) {
     throw new HttpError(404, "Patient not found");
-  }
-
-  if (patient.userId !== userId) {
-    throw new HttpError(403, "You do not have access to this patient");
   }
 
   return patient;
@@ -28,11 +25,21 @@ export async function createPatient(userId: string, input: CreatePatientInput) {
   });
 }
 
-export async function listPatients(userId: string) {
-  return prisma.patient.findMany({
-    where: { userId },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-  });
+export async function listPatients(userId: string, pagination: PaginationQuery) {
+  const { page, limit } = pagination;
+  const where = { userId, deletedAt: null };
+
+  const [patients, total] = await prisma.$transaction([
+    prisma.patient.findMany({
+      where,
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.patient.count({ where }),
+  ]);
+
+  return { patients, total, page, limit };
 }
 
 export async function getPatientById(userId: string, patientId: string) {
@@ -55,8 +62,9 @@ export async function updatePatient(
 export async function deletePatient(userId: string, patientId: string) {
   await findPatientForUser(patientId, userId);
 
-  await prisma.patient.delete({
+  await prisma.patient.update({
     where: { id: patientId },
+    data: { deletedAt: new Date() },
   });
 }
 
@@ -69,14 +77,14 @@ export type DashboardSummary = {
 export async function getDashboardSummary(userId: string) {
   const [patientCount, sessionCount, activeGoalsCount] = await prisma.$transaction([
     prisma.patient.count({
-      where: { userId },
+      where: { userId, deletedAt: null },
     }),
     prisma.session.count({
-      where: { patient: { userId } },
+      where: { patient: { userId, deletedAt: null }, deletedAt: null },
     }),
     prisma.clinicalGoal.count({
       where: {
-        patient: { userId },
+        patient: { userId, deletedAt: null },
         status: {
           notIn: ["ACHIEVED", "CANCELLED"],
         },

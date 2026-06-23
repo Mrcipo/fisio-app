@@ -17,6 +17,8 @@ import {
   type PatientInput,
 } from "@/lib/patients-api";
 
+const LIMIT = 20;
+
 export function PatientsClient() {
   const [hasMounted, setHasMounted] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -25,14 +27,19 @@ export function PatientsClient() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  async function loadPatients() {
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+
+  async function loadPatients(pageToLoad = page) {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await listPatients();
+      const response = await listPatients(pageToLoad, LIMIT);
       setPatients(response.patients);
+      setTotal(response.total);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "No se pudo cargar");
     } finally {
@@ -49,8 +56,8 @@ export function PatientsClient() {
       return;
     }
 
-    void loadPatients();
-  }, [hasMounted]);
+    void loadPatients(page);
+  }, [hasMounted, page]);
 
   if (!hasMounted) {
     return <LoadingState label="Cargando pacientes..." />;
@@ -75,7 +82,7 @@ export function PatientsClient() {
 
     setIsFormOpen(false);
     setEditingPatient(null);
-    await loadPatients();
+    await loadPatients(page);
   }
 
   async function handleDelete() {
@@ -85,7 +92,14 @@ export function PatientsClient() {
 
     await deletePatient(patientToDelete.id);
     setPatientToDelete(null);
-    await loadPatients();
+    // If we deleted the last item on a non-first page, go back one page
+    const remainingOnPage = patients.length - 1;
+    const newPage = remainingOnPage === 0 && page > 1 ? page - 1 : page;
+    if (newPage !== page) {
+      setPage(newPage);
+    } else {
+      await loadPatients(page);
+    }
   }
 
   return (
@@ -157,6 +171,27 @@ export function PatientsClient() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="flex items-center justify-between border-t border-[#d9e1dc] px-4 py-3">
+            <p className="text-sm text-[#66746e]">
+              Página {page} de {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Siguiente
+              </Button>
+            </div>
           </div>
         </Card>
       ) : null}

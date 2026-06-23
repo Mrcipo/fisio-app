@@ -3,6 +3,7 @@ import Link from "next/link";
 const navigation = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/patients", label: "Pacientes" },
+  { href: "/exercises", label: "Ejercicios" },
 ];
 
 export function Sidebar() {

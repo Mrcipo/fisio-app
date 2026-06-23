@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { HttpError } from "../../lib/http-error";
+import { getJwtSecret } from "../../lib/jwt";
 import { prisma } from "../../lib/prisma";
 import type { LoginInput, RegisterInput } from "./auth.schemas";
 
@@ -14,16 +15,6 @@ type AuthUser = {
   lastName: string;
   role: string;
 };
-
-function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    throw new HttpError(500, "JWT secret is not configured");
-  }
-
-  return secret;
-}
 
 function toAuthUser(user: AuthUser): AuthUser {
   return {

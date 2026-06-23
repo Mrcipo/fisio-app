@@ -3,33 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Patient, PatientInput, PatientSex } from "@/lib/patients-api";
-
-const patientFormSchema = z.object({
-  firstName: z.string().trim().min(1, "El nombre es obligatorio"),
-  lastName: z.string().trim().min(1, "El apellido es obligatorio"),
-  documentNumber: z.string(),
-  dateOfBirth: z.string(),
-  sex: z.enum(["FEMALE", "MALE", "OTHER", "NOT_SPECIFIED"]),
-  phone: z.string(),
-  email: z
-    .string()
-    .trim()
-    .refine((value) => value === "" || z.string().email().safeParse(value).success, {
-      message: "Email inválido",
-    }),
-  occupation: z.string(),
-  address: z.string(),
-  notes: z.string(),
-});
-
-type PatientFormValues = z.infer<typeof patientFormSchema>;
+import { patientFormSchema, type PatientFormValues } from "@/lib/schemas";
 
 type PatientFormProps = {
   patient?: Patient | null;

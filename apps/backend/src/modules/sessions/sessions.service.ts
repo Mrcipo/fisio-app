@@ -1,4 +1,5 @@
 import { HttpError } from "../../lib/http-error";
+import { type PaginationQuery } from "../../lib/pagination";
 import { prisma } from "../../lib/prisma";
 import { findPatientForUser } from "../patients/patients.service";
 import type {
@@ -8,8 +9,8 @@ import type {
 } from "./sessions.schemas";
 
 async function findSessionForUser(sessionId: string, userId: string) {
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
+  const session = await prisma.session.findFirst({
+    where: { id: sessionId, deletedAt: null, patient: { userId } },
     include: {
       patient: {
         select: {
@@ -21,10 +22,6 @@ async function findSessionForUser(sessionId: string, userId: string) {
 
   if (!session) {
     throw new HttpError(404, "Session not found");
-  }
-
-  if (session.patient.userId !== userId) {
-    throw new HttpError(403, "You do not have access to this session");
   }
 
   return session;
@@ -105,23 +102,35 @@ export async function createSession(
   });
 }
 
-export async function listSessions(userId: string, patientId: string) {
+export async function listSessions(
+  userId: string,
+  patientId: string,
+  pagination: PaginationQuery,
+) {
   await findPatientForUser(patientId, userId);
 
-  return prisma.session.findMany({
-    where: { patientId },
-    include: {
-      sessionExercises: true,
-    },
-    orderBy: { date: "desc" },
-  });
+  const { page, limit } = pagination;
+  const where = { patientId, deletedAt: null };
+
+  const [sessions, total] = await prisma.$transaction([
+    prisma.session.findMany({
+      where,
+      include: { sessionExercises: true },
+      orderBy: { date: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.session.count({ where }),
+  ]);
+
+  return { sessions, total, page, limit };
 }
 
 export async function getSessionById(userId: string, sessionId: string) {
   await findSessionForUser(sessionId, userId);
 
-  return prisma.session.findUniqueOrThrow({
-    where: { id: sessionId },
+  return prisma.session.findFirstOrThrow({
+    where: { id: sessionId, deletedAt: null },
     include: {
       sessionExercises: true,
     },
@@ -163,7 +172,8 @@ export async function updateSession(
 export async function deleteSession(userId: string, sessionId: string) {
   await findSessionForUser(sessionId, userId);
 
-  await prisma.session.delete({
+  await prisma.session.update({
     where: { id: sessionId },
+    data: { deletedAt: new Date() },
   });
 }

@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const TOKEN_KEY = "fisioterapia_app_token";
 
 type ApiOptions = RequestInit & {
@@ -71,6 +71,28 @@ export async function fetchHtml(path: string, options: ApiOptions = {}) {
   }
 
   return response.text();
+}
+
+export async function fetchBlob(path: string, options: ApiOptions = {}) {
+  const { auth = true, headers, ...requestOptions } = options;
+  const token = getToken();
+
+  const response = await fetch(`${API_URL}${path}`, {
+    ...requestOptions,
+    headers: {
+      ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    const message = errorBody?.error?.message ?? "Request failed";
+
+    throw new Error(message);
+  }
+
+  return response.blob();
 }
 
 type AuthResponse = {

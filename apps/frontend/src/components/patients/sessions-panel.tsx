@@ -17,6 +17,8 @@ import {
   type SessionInput,
 } from "@/lib/patients-api";
 
+const LIMIT = 20;
+
 type SessionsPanelProps = {
   patientId: string;
 };
@@ -30,18 +32,23 @@ export function SessionsPanel({ patientId }: SessionsPanelProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  async function loadSessions() {
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+
+  async function loadSessions(pageToLoad = page) {
     setIsLoading(true);
     setError(null);
 
     try {
       const [sessionsResponse, exercisesResponse] = await Promise.all([
-        listSessions(patientId),
+        listSessions(patientId, pageToLoad, LIMIT),
         listExercises(),
       ]);
 
       setSessions(sessionsResponse.sessions);
+      setTotal(sessionsResponse.total);
       setExercises(exercisesResponse.exercises);
 
       if (selectedSession) {
@@ -56,8 +63,12 @@ export function SessionsPanel({ patientId }: SessionsPanelProps) {
   }
 
   useEffect(() => {
-    void loadSessions();
+    setPage(1);
   }, [patientId]);
+
+  useEffect(() => {
+    void loadSessions(page);
+  }, [patientId, page]);
 
   async function openSessionDetail(sessionId: string) {
     try {
@@ -77,7 +88,7 @@ export function SessionsPanel({ patientId }: SessionsPanelProps) {
 
     setIsFormOpen(false);
     setEditingSession(null);
-    await loadSessions();
+    await loadSessions(page);
   }
 
   async function handleDelete() {
@@ -92,7 +103,13 @@ export function SessionsPanel({ patientId }: SessionsPanelProps) {
     }
 
     setSessionToDelete(null);
-    await loadSessions();
+    const remainingOnPage = sessions.length - 1;
+    const newPage = remainingOnPage === 0 && page > 1 ? page - 1 : page;
+    if (newPage !== page) {
+      setPage(newPage);
+    } else {
+      await loadSessions(page);
+    }
   }
 
   return (
@@ -130,31 +147,54 @@ export function SessionsPanel({ patientId }: SessionsPanelProps) {
         ) : null}
 
         {!isLoading && sessions.length > 0 ? (
-          <div className="grid gap-3">
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                type="button"
-                onClick={() => void openSessionDetail(session.id)}
-                className="rounded-lg border border-[#d9e1dc] bg-[#fbfcfb] px-4 py-4 text-left transition hover:border-[#0f766e]"
-              >
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-[#17211d]">
-                      {formatDate(session.date)}
-                    </p>
-                    <p className="mt-1 text-sm text-[#66746e]">
-                      {session.subjectiveReport || "Sin reporte subjetivo"}
-                    </p>
+          <>
+            <div className="grid gap-3">
+              {sessions.map((session) => (
+                <button
+                  key={session.id}
+                  type="button"
+                  onClick={() => void openSessionDetail(session.id)}
+                  className="rounded-lg border border-[#d9e1dc] bg-[#fbfcfb] px-4 py-4 text-left transition hover:border-[#0f766e]"
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-[#17211d]">
+                        {formatDate(session.date)}
+                      </p>
+                      <p className="mt-1 text-sm text-[#66746e]">
+                        {session.subjectiveReport || "Sin reporte subjetivo"}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Tag label={`Dolor antes: ${formatNumber(session.painBefore)}`} />
+                      <Tag label={`Dolor después: ${formatNumber(session.painAfter)}`} />
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Tag label={`Dolor antes: ${formatNumber(session.painBefore)}`} />
-                    <Tag label={`Dolor después: ${formatNumber(session.painAfter)}`} />
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t border-[#d9e1dc] pt-3">
+              <p className="text-sm text-[#66746e]">
+                Página {page} de {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+          </>
         ) : null}
       </Card>
 

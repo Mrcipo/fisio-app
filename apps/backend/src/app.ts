@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { asyncHandler } from "./lib/async-handler";
 import { prisma } from "./lib/prisma";
 import { errorHandler } from "./middlewares/error-handler";
@@ -17,7 +18,7 @@ import { progressMetricsRouter } from "./modules/progressMetrics/progressMetrics
 export function createApp() {
   const app = express();
 
-  app.use(cors());
+  app.use(cors({ origin: process.env.ALLOWED_ORIGIN ?? "http://localhost:3000" }));
   app.use(express.json());
 
   app.get(
@@ -39,7 +40,8 @@ export function createApp() {
     }),
   );
 
-  app.use("/auth", authRouter);
+  const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+  app.use("/auth", authLimiter, authRouter);
   app.use("/patients", patientsRouter);
   app.use("/objective-assessments", objectiveAssessmentsRouter);
   app.use("/rehab-plans", rehabPlansRouter);
