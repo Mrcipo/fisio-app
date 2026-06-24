@@ -1,38 +1,16 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-const TOKEN_KEY = "fisioterapia_app_token";
-
-type ApiOptions = RequestInit & {
-  auth?: boolean;
-};
-
-export function getToken() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  return window.localStorage.getItem(TOKEN_KEY);
-}
-
-export function setToken(token: string) {
-  window.localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function clearToken() {
-  window.localStorage.removeItem(TOKEN_KEY);
-}
 
 export async function apiClient<TResponse>(
   path: string,
-  options: ApiOptions = {},
+  options: RequestInit = {},
 ): Promise<TResponse> {
-  const { auth = true, headers, ...requestOptions } = options;
-  const token = getToken();
+  const { headers, ...requestOptions } = options;
 
   const response = await fetch(`${API_URL}${path}`, {
     ...requestOptions,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
   });
@@ -51,14 +29,13 @@ export async function apiClient<TResponse>(
   return response.json() as Promise<TResponse>;
 }
 
-export async function fetchHtml(path: string, options: ApiOptions = {}) {
-  const { auth = true, headers, ...requestOptions } = options;
-  const token = getToken();
+export async function fetchHtml(path: string, options: RequestInit = {}) {
+  const { headers, ...requestOptions } = options;
 
   const response = await fetch(`${API_URL}${path}`, {
     ...requestOptions,
+    credentials: "include",
     headers: {
-      ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
   });
@@ -73,14 +50,13 @@ export async function fetchHtml(path: string, options: ApiOptions = {}) {
   return response.text();
 }
 
-export async function fetchBlob(path: string, options: ApiOptions = {}) {
-  const { auth = true, headers, ...requestOptions } = options;
-  const token = getToken();
+export async function fetchBlob(path: string, options: RequestInit = {}) {
+  const { headers, ...requestOptions } = options;
 
   const response = await fetch(`${API_URL}${path}`, {
     ...requestOptions,
+    credentials: "include",
     headers: {
-      ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
   });
@@ -95,27 +71,21 @@ export async function fetchBlob(path: string, options: ApiOptions = {}) {
   return response.blob();
 }
 
-type AuthResponse = {
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    role: string;
-  };
-  token: string;
+type AuthUser = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
 };
 
-export async function login(input: { email: string; password: string }) {
-  const response = await apiClient<AuthResponse>("/auth/login", {
+export async function login(input: { email: string; password: string }): Promise<AuthUser> {
+  const response = await apiClient<{ user: AuthUser }>("/auth/login", {
     method: "POST",
-    auth: false,
     body: JSON.stringify(input),
   });
 
-  setToken(response.token);
-
-  return response;
+  return response.user;
 }
 
 export async function register(input: {
@@ -123,14 +93,15 @@ export async function register(input: {
   password: string;
   firstName: string;
   lastName: string;
-}) {
-  const response = await apiClient<AuthResponse>("/auth/register", {
+}): Promise<AuthUser> {
+  const response = await apiClient<{ user: AuthUser }>("/auth/register", {
     method: "POST",
-    auth: false,
     body: JSON.stringify(input),
   });
 
-  setToken(response.token);
+  return response.user;
+}
 
-  return response;
+export async function logout(): Promise<void> {
+  await apiClient("/auth/logout", { method: "POST" });
 }

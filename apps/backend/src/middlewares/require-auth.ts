@@ -11,13 +11,13 @@ type JwtPayload = {
 };
 
 export const requireAuth = asyncHandler(async (req, _res, next) => {
+  const cookieToken = req.cookies?.token as string | undefined;
   const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.replace("Bearer ", "").trim()
+    : undefined;
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    throw new HttpError(401, "Authentication required");
-  }
-
-  const token = authHeader.replace("Bearer ", "").trim();
+  const token = cookieToken ?? bearerToken;
 
   if (!token) {
     throw new HttpError(401, "Authentication required");
