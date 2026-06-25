@@ -25,9 +25,26 @@ export async function createPatient(userId: string, input: CreatePatientInput) {
   });
 }
 
-export async function listPatients(userId: string, pagination: PaginationQuery) {
+export async function listPatients(
+  userId: string,
+  pagination: PaginationQuery,
+  search?: string,
+) {
   const { page, limit } = pagination;
-  const where = { userId, deletedAt: null };
+  const searchTerm = search?.trim();
+  const where = {
+    userId,
+    deletedAt: null,
+    ...(searchTerm
+      ? {
+          OR: [
+            { firstName: { contains: searchTerm, mode: "insensitive" as const } },
+            { lastName: { contains: searchTerm, mode: "insensitive" as const } },
+            { documentNumber: { contains: searchTerm, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
 
   const [patients, total] = await prisma.$transaction([
     prisma.patient.findMany({

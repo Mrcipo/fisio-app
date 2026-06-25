@@ -59,7 +59,8 @@ export const createPatientController = asyncHandler(async (req, res) => {
 export const listPatientsController = asyncHandler(async (req, res) => {
   const userId = getAuthenticatedUserId(req.user);
   const pagination = paginationSchema.parse(req.query);
-  const result = await listPatients(userId, pagination);
+  const search = typeof req.query.search === "string" ? req.query.search.trim() : undefined;
+  const result = await listPatients(userId, pagination, search || undefined);
 
   res.status(200).json(result);
 });

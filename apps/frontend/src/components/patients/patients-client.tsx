@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMounted } from "@/hooks/use-mounted";
 import { EmptyState } from "@/components/empty-state";
 import { LoadingState } from "@/components/loading-state";
@@ -30,15 +30,17 @@ export function PatientsClient() {
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
-  async function loadPatients(pageToLoad = page) {
+  async function loadPatients(pageToLoad = page, searchTerm = search) {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await listPatients(pageToLoad, LIMIT);
+      const response = await listPatients(pageToLoad, LIMIT, searchTerm || undefined);
       setPatients(response.patients);
       setTotal(response.total);
     } catch (caughtError) {
@@ -46,6 +48,15 @@ export function PatientsClient() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      void loadPatients(1, value);
+    }, 300);
   }
 
   useEffect(() => {
@@ -107,6 +118,16 @@ export function PatientsClient() {
         action={<Button onClick={openCreateForm}>Nuevo paciente</Button>}
       />
 
+      <div className="mb-4">
+        <input
+          type="search"
+          placeholder="Buscar por nombre, apellido o documento..."
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="w-full max-w-sm rounded-md border border-[#d9e1dc] bg-white px-3 py-2 text-sm text-[#17211d] placeholder:text-[#66746e] focus:outline-none focus:ring-2 focus:ring-[#0f766e]"
+        />
+      </div>
+
       {error ? (
         <Card className="border-red-200 bg-red-50 text-sm text-red-800">{error}</Card>
       ) : null}
@@ -115,9 +136,13 @@ export function PatientsClient() {
 
       {!isLoading && patients.length === 0 ? (
         <EmptyState
-          title="Todavía no hay pacientes"
-          description="Creá el primer paciente para comenzar a cargar su historia clínica."
-          action={<Button onClick={openCreateForm}>Nuevo paciente</Button>}
+          title={search ? "Sin resultados" : "Todavía no hay pacientes"}
+          description={
+            search
+              ? `No se encontraron pacientes para "${search}".`
+              : "Creá el primer paciente para comenzar a cargar su historia clínica."
+          }
+          action={!search ? <Button onClick={openCreateForm}>Nuevo paciente</Button> : undefined}
         />
       ) : null}
 

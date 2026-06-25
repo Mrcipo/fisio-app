@@ -221,9 +221,11 @@ export type DashboardSummary = {
   activeGoalsCount: number;
 };
 
-export async function listPatients(page = 1, limit = 20) {
+export async function listPatients(page = 1, limit = 20, search?: string) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (search) params.set("search", search);
   return apiClient<{ patients: Patient[]; total: number; page: number; limit: number }>(
-    `/patients?page=${page}&limit=${limit}`,
+    `/patients?${params.toString()}`,
   );
 }
 
