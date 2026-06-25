@@ -49,14 +49,23 @@ export function ProgressDashboardClient({ patientId }: ProgressDashboardClientPr
       setError(null);
 
       try {
-        const [patientResponse, sessionsResponse, summaryResponse] = await Promise.all([
+        const [patientResponse, summaryResponse] = await Promise.all([
           getPatient(patientId),
-          listSessions(patientId),
           getProgressSummary(patientId),
         ]);
 
+        const allSessions: Session[] = [];
+        let page = 1;
+        const limit = 100;
+        while (true) {
+          const batch = await listSessions(patientId, page, limit);
+          allSessions.push(...batch.sessions);
+          if (allSessions.length >= batch.total) break;
+          page++;
+        }
+
         setPatient(patientResponse.patient);
-        setSessions(sessionsResponse.sessions);
+        setSessions(allSessions);
         setProgressSummary(summaryResponse.progressSummary);
       } catch (caughtError) {
         setError(caughtError instanceof Error ? caughtError.message : "No se pudo cargar");

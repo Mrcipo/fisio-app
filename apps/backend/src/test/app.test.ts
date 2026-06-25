@@ -24,6 +24,14 @@ function authHeader(userId = "user-1") {
   };
 }
 
+function authCookie(userId = "user-1") {
+  const token = jwt.sign(
+    { sub: userId, email: `${userId}@mail.com`, role: "CLINICIAN" },
+    process.env.JWT_SECRET as string,
+  );
+  return `token=${token}`;
+}
+
 function mockAuthenticatedUser(userId = "user-1") {
   prismaMock.user.findUnique.mockResolvedValue({
     id: userId,
@@ -159,6 +167,26 @@ describe("Backend basic flows", () => {
 
     expect(response.status).toBe(404);
     expect(response.body.error.message).toBe("Patient not found");
+  });
+
+  describe("require-auth cookie support", () => {
+    it("grants access to a protected route when token is in cookie", async () => {
+      mockAuthenticatedUser();
+      prismaMock.$transaction.mockResolvedValue([[], 0]);
+
+      const response = await request(app).get("/patients").set("Cookie", authCookie());
+
+      expect(response.status).toBe(200);
+    });
+
+    it("returns 401 when cookie contains an invalid token", async () => {
+      const response = await request(app)
+        .get("/patients")
+        .set("Cookie", "token=not-a-valid-jwt");
+
+      expect(response.status).toBe(401);
+      expect(response.body.error.message).toBe("Authentication required");
+    });
   });
 
   it("creates a session with performed exercises", async () => {
