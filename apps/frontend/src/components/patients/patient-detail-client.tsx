@@ -8,11 +8,13 @@ import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { GoalsPanel } from "@/components/patients/goals-panel";
 import { InitialAssessmentForm } from "@/components/patients/initial-assessment-form";
+import { ProgressDashboardClient } from "@/components/patients/progress-dashboard-client";
 import { RehabPlansPanel } from "@/components/patients/rehab-plans-panel";
 import { PatientForm } from "@/components/patients/patient-form";
 import { SessionsPanel } from "@/components/patients/sessions-panel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   createInitialAssessment,
   getPatient,
@@ -29,7 +31,6 @@ type PatientDetailClientProps = {
   patientId: string;
 };
 
-
 export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
   const hasMounted = useMounted();
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -39,6 +40,7 @@ export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [activeTab, setActiveTab] = useState("resumen");
 
   async function loadPatient() {
     setIsLoading(true);
@@ -179,9 +181,6 @@ export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
         description="Datos básicos y módulos clínicos del paciente."
         action={
           <div className="flex flex-wrap gap-2">
-            <Link href={`/patients/${patientId}/progress`}>
-              <Button variant="outline">Ver evolución</Button>
-            </Link>
             <Button
               variant="outline"
               onClick={() => void handleOpenReport()}
@@ -194,49 +193,68 @@ export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="grid gap-4">
-          <Card>
-            <h2 className="text-lg font-semibold text-[#17211d]">Datos básicos</h2>
-            <dl className="mt-4 grid gap-3 text-sm md:grid-cols-2">
-              <Info label="Documento" value={patient.documentNumber} />
-              <Info label="Fecha de nacimiento" value={formatDate(patient.dateOfBirth)} />
-              <Info label="Sexo" value={formatSex(patient.sex)} />
-              <Info label="Teléfono" value={patient.phone} />
-              <Info label="Email" value={patient.email} />
-              <Info label="Ocupación" value={patient.occupation} />
-              <Info label="Dirección" value={patient.address} />
-              <Info label="Notas" value={patient.notes} />
-            </dl>
-          </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="resumen">Resumen</TabsTrigger>
+          <TabsTrigger value="sesiones">Sesiones</TabsTrigger>
+          <TabsTrigger value="objetivos">Objetivos y plan</TabsTrigger>
+          <TabsTrigger value="evaluacion">Evaluación</TabsTrigger>
+          <TabsTrigger value="progreso">Progreso</TabsTrigger>
+        </TabsList>
 
-          <Card>
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-[#17211d]">Anamnesis inicial</h2>
-              <p className="mt-2 text-sm leading-6 text-[#66746e]">
-                Registro clínico inicial del motivo de consulta, dolor, antecedentes y metas
-                funcionales.
-              </p>
-            </div>
+        <TabsContent value="resumen">
+          <div className="grid gap-4">
+            <Card>
+              <h2 className="text-lg font-semibold text-[#17211d]">Datos básicos</h2>
+              <dl className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+                <Info label="Documento" value={patient.documentNumber} />
+                <Info label="Fecha de nacimiento" value={formatDate(patient.dateOfBirth)} />
+                <Info label="Sexo" value={formatSex(patient.sex)} />
+                <Info label="Teléfono" value={patient.phone} />
+                <Info label="Email" value={patient.email} />
+                <Info label="Ocupación" value={patient.occupation} />
+                <Info label="Dirección" value={patient.address} />
+                <Info label="Notas" value={patient.notes} />
+                <Info label="Creado" value={formatDate(patient.createdAt)} />
+                <Info label="Última edición" value={formatDate(patient.updatedAt)} />
+              </dl>
+            </Card>
 
-            {initialAssessmentError ? (
-              <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                {initialAssessmentError}
+            <Card>
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold text-[#17211d]">Anamnesis inicial</h2>
+                <p className="mt-2 text-sm leading-6 text-[#66746e]">
+                  Registro clínico inicial del motivo de consulta, dolor, antecedentes y metas
+                  funcionales.
+                </p>
               </div>
-            ) : null}
 
-            <InitialAssessmentForm
-              initialAssessment={initialAssessment}
-              onSubmit={handleInitialAssessmentSubmit}
-            />
-          </Card>
+              {initialAssessmentError ? (
+                <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  {initialAssessmentError}
+                </div>
+              ) : null}
 
+              <InitialAssessmentForm
+                initialAssessment={initialAssessment}
+                onSubmit={handleInitialAssessmentSubmit}
+              />
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sesiones">
           <SessionsPanel patientId={patientId} />
+        </TabsContent>
 
-          <GoalsPanel patientId={patientId} />
+        <TabsContent value="objetivos">
+          <div className="grid gap-4">
+            <GoalsPanel patientId={patientId} />
+            <RehabPlansPanel patientId={patientId} />
+          </div>
+        </TabsContent>
 
-          <RehabPlansPanel patientId={patientId} />
-
+        <TabsContent value="evaluacion">
           <Card>
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -250,16 +268,12 @@ export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
               </Link>
             </div>
           </Card>
-        </div>
+        </TabsContent>
 
-        <Card className="h-fit">
-          <h2 className="text-lg font-semibold text-[#17211d]">Resumen</h2>
-          <div className="mt-4 grid gap-3 text-sm">
-            <Info label="Creado" value={formatDate(patient.createdAt)} />
-            <Info label="Última edición" value={formatDate(patient.updatedAt)} />
-          </div>
-        </Card>
-      </div>
+        <TabsContent value="progreso">
+          <ProgressDashboardClient patientId={patientId} />
+        </TabsContent>
+      </Tabs>
 
       {isEditing ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 px-4 py-8">
