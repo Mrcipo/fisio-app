@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useMounted } from "@/hooks/use-mounted";
 import { EmptyState } from "@/components/empty-state";
 import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
@@ -30,7 +31,7 @@ type PatientDetailClientProps = {
 
 
 export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasMounted = useMounted();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [initialAssessment, setInitialAssessment] = useState<InitialAssessment | null>(null);
   const [initialAssessmentError, setInitialAssessmentError] = useState<string | null>(null);
@@ -52,10 +53,6 @@ export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
       setIsLoading(false);
     }
   }
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!hasMounted) {
@@ -167,6 +164,16 @@ export function PatientDetailClient({ patientId }: PatientDetailClientProps) {
 
   return (
     <>
+      <nav className="mb-4 flex items-center gap-2 text-sm text-[#66746e]">
+        <Link href="/patients" className="hover:text-[#17211d]">
+          Pacientes
+        </Link>
+        <span>/</span>
+        <span className="font-medium text-[#17211d]">
+          {patient.firstName} {patient.lastName}
+        </span>
+      </nav>
+
       <PageHeader
         title={`${patient.firstName} ${patient.lastName}`}
         description="Datos básicos y módulos clínicos del paciente."

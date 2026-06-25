@@ -1,5 +1,18 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
+const ERROR_TRANSLATIONS: Record<string, string> = {
+  "Patient not found": "Paciente no encontrado",
+  "Session not found": "Sesión no encontrada",
+  "Initial assessment not found": "Anamnesis inicial no encontrada",
+  Unauthorized: "No autorizado",
+  "Invalid credentials": "Credenciales inválidas",
+  "Email already in use": "El email ya está en uso",
+};
+
+function translateError(message: string): string {
+  return ERROR_TRANSLATIONS[message] ?? message;
+}
+
 export async function apiClient<TResponse>(
   path: string,
   options: RequestInit = {},
@@ -17,9 +30,9 @@ export async function apiClient<TResponse>(
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
-    const message = errorBody?.error?.message ?? "Request failed";
+    const rawMessage = errorBody?.error?.message ?? "Request failed";
 
-    throw new Error(message);
+    throw new Error(translateError(rawMessage));
   }
 
   if (response.status === 204) {
@@ -27,27 +40,6 @@ export async function apiClient<TResponse>(
   }
 
   return response.json() as Promise<TResponse>;
-}
-
-export async function fetchHtml(path: string, options: RequestInit = {}) {
-  const { headers, ...requestOptions } = options;
-
-  const response = await fetch(`${API_URL}${path}`, {
-    ...requestOptions,
-    credentials: "include",
-    headers: {
-      ...headers,
-    },
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => null);
-    const message = errorBody?.error?.message ?? "Request failed";
-
-    throw new Error(message);
-  }
-
-  return response.text();
 }
 
 export async function fetchBlob(path: string, options: RequestInit = {}) {

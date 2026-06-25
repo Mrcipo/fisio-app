@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useMounted } from "@/hooks/use-mounted";
 import { EmptyState } from "@/components/empty-state";
 import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
@@ -20,7 +21,7 @@ import {
 const LIMIT = 20;
 
 export function PatientsClient() {
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasMounted = useMounted();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,10 +47,6 @@ export function PatientsClient() {
       setIsLoading(false);
     }
   }
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!hasMounted) {

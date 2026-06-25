@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useMounted } from "@/hooks/use-mounted";
 import {
   CartesianGrid,
   Line,
@@ -31,16 +32,12 @@ type ProgressDashboardClientProps = {
 };
 
 export function ProgressDashboardClient({ patientId }: ProgressDashboardClientProps) {
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasMounted = useMounted();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [progressSummary, setProgressSummary] = useState<ProgressSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!hasMounted) {

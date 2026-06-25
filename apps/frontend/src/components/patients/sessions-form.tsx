@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -136,6 +137,7 @@ export function SessionsForm({
           <Button
             type="button"
             variant="outline"
+            disabled={exercisesCatalog.length === 0}
             onClick={() =>
               append({
                 exerciseId: "",
@@ -152,6 +154,16 @@ export function SessionsForm({
             Agregar ejercicio
           </Button>
         </div>
+
+        {exercisesCatalog.length === 0 ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            No hay ejercicios cargados en el catálogo.{" "}
+            <Link href="/exercises" className="font-semibold underline">
+              Ir a Ejercicios
+            </Link>{" "}
+            para agregar ejercicios antes de registrarlos en una sesión.
+          </div>
+        ) : null}
 
         {fields.length === 0 ? (
           <Card className="border-dashed p-4 text-sm text-[#66746e]">

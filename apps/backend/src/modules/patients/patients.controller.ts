@@ -81,9 +81,7 @@ export const getPatientByIdController = asyncHandler(async (req, res) => {
 
 export const getPatientReportController = asyncHandler(async (req, res) => {
   const userId = getAuthenticatedUserId(req.user);
-  const patientId = Array.isArray(req.params.patientId)
-    ? req.params.patientId[0]
-    : req.params.patientId;
+  const patientId = req.params.patientId;
 
   const reportHtml = await getPatientReport(userId, patientId);
   const executablePath = findChromeExecutable();
