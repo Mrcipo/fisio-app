@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        nav: "900px",
+      },
       colors: {
         brand: {
           DEFAULT: "#0f766e",

@@ -9,12 +9,23 @@ const navigation = [
   { href: "/exercises", label: "Ejercicios" },
 ];
 
-export function Sidebar() {
+type SidebarProps = {
+  isOpen?: boolean;
+  onClose?: () => void;
+};
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden min-h-screen w-64 border-r border-[#d9e1dc] bg-[#17211d] px-5 py-6 text-white lg:block">
-      <Link href="/dashboard" className="block">
+    <aside
+      className={[
+        "fixed inset-y-0 left-0 z-50 w-64 border-r border-[#d9e1dc] bg-[#17211d] px-5 py-6 text-white transition-transform",
+        "nav:relative nav:translate-x-0 nav:min-h-screen",
+        isOpen ? "translate-x-0" : "-translate-x-full",
+      ].join(" ")}
+    >
+      <Link href="/dashboard" className="block" onClick={onClose}>
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-100">
           Fisio MSK
         </p>
@@ -32,6 +43,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={
                 isActive
                   ? "rounded-md bg-white/15 px-3 py-2 text-sm font-medium text-white"
