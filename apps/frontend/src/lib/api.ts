@@ -28,6 +28,11 @@ export async function apiClient<TResponse>(
     },
   });
 
+  if (response.status === 401) {
+    window.location.href = "/login";
+    throw new Error("Sesión expirada");
+  }
+
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
     const rawMessage = errorBody?.error?.message ?? "Request failed";
