@@ -32,6 +32,8 @@ export type PatientInput = {
   notes?: string;
 };
 
+export type IrritabilityLevel = "LOW" | "MEDIUM" | "HIGH";
+
 export type InitialAssessment = {
   id: string;
   patientId: string;
@@ -54,6 +56,19 @@ export type InitialAssessment = {
   redFlags: string | null;
   patientGoals: string | null;
   limitedActivities: string | null;
+  painMorning: string | null;
+  painDayTime: string | null;
+  painNight: string | null;
+  irritability: IrritabilityLevel | null;
+  irritabilityNotes: string | null;
+  yellowFlags: string | null;
+  kinesophobia: boolean | null;
+  workRelated: boolean | null;
+  compensationClaim: boolean | null;
+  sportActivity: string | null;
+  sportLevel: string | null;
+  workPosture: string | null;
+  sleepImpact: boolean | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -78,6 +93,19 @@ export type InitialAssessmentInput = {
   redFlags?: string;
   patientGoals?: string;
   limitedActivities?: string;
+  painMorning?: string;
+  painDayTime?: string;
+  painNight?: string;
+  irritability?: IrritabilityLevel;
+  irritabilityNotes?: string;
+  yellowFlags?: string;
+  kinesophobia?: boolean;
+  workRelated?: boolean;
+  compensationClaim?: boolean;
+  sportActivity?: string;
+  sportLevel?: string;
+  workPosture?: string;
+  sleepImpact?: boolean;
 };
 
 export type ClinicalDecision = "MAINTAIN" | "PROGRESS" | "REGRESS" | "REFER";

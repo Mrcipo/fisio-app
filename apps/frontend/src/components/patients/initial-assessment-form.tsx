@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
 import type {
   InitialAssessment,
   InitialAssessmentInput,
+  IrritabilityLevel,
 } from "@/lib/patients-api";
 
 const optionalText = z.string();
@@ -44,6 +46,19 @@ const formSchema = z.object({
   redFlags: optionalText,
   patientGoals: optionalText,
   limitedActivities: optionalText,
+  painMorning: optionalText,
+  painDayTime: optionalText,
+  painNight: optionalText,
+  irritability: z.string(),
+  irritabilityNotes: optionalText,
+  yellowFlags: optionalText,
+  kinesophobia: z.boolean(),
+  workRelated: z.boolean(),
+  compensationClaim: z.boolean(),
+  sportActivity: optionalText,
+  sportLevel: optionalText,
+  workPosture: optionalText,
+  sleepImpact: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -53,6 +68,11 @@ type InitialAssessmentFormProps = {
   onSubmit: (input: InitialAssessmentInput) => Promise<void>;
 };
 
+const IRRITABILITY_TOOLTIP =
+  "Alta: el dolor se provoca fácilmente y tarda en calmarse. " +
+  "Media: se provoca con esfuerzo moderado. " +
+  "Baja: difícil de provocar y se calma rápido.";
+
 export function InitialAssessmentForm({
   initialAssessment,
   onSubmit,
@@ -61,6 +81,8 @@ export function InitialAssessmentForm({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -139,6 +161,103 @@ export function InitialAssessmentForm({
       </CollapsibleSection>
 
       <CollapsibleSection
+        title="Comportamiento del dolor en 24 horas"
+        description="El patrón circadiano define el tipo de patología y la agresividad del tratamiento."
+      >
+        <div className="grid gap-4">
+          <Field label="Al levantarse" error={errors.painMorning?.message}>
+            <Textarea
+              {...register("painMorning")}
+              placeholder="¿Cómo está el dolor al despertar? ¿Mejora o empeora al moverse?"
+            />
+          </Field>
+          <Field label="Durante el día" error={errors.painDayTime?.message}>
+            <Textarea
+              {...register("painDayTime")}
+              placeholder="¿Empeora con la actividad sostenida? ¿Mejora o empeora hacia la tarde?"
+            />
+          </Field>
+          <Field
+            label="Por la noche / ¿Despierta al paciente?"
+            error={errors.painNight?.message}
+          >
+            <Textarea
+              {...register("painNight")}
+              placeholder="¿El dolor interrumpe el sueño? ¿En qué posición? ¿A qué hora?"
+            />
+          </Field>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Irritabilidad del cuadro"
+        description="Determina la intensidad segura de exploración y tratamiento desde la primera sesión."
+      >
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium leading-none">Nivel de irritabilidad</span>
+              <span
+                title={IRRITABILITY_TOOLTIP}
+                className="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted text-xs text-muted-foreground"
+              >
+                ?
+              </span>
+            </div>
+            <Select {...register("irritability")}>
+              <option value="">Seleccionar irritabilidad…</option>
+              <option value="LOW">Baja — difícil de provocar, se calma rápido</option>
+              <option value="MEDIUM">Media — se provoca con esfuerzo moderado</option>
+              <option value="HIGH">Alta — se provoca fácilmente, tarda en calmarse</option>
+            </Select>
+          </div>
+          <Field label="Justificación / observaciones" error={errors.irritabilityNotes?.message}>
+            <Textarea
+              {...register("irritabilityNotes")}
+              placeholder="¿Qué movimientos o actividades demuestran la irritabilidad del cuadro?"
+            />
+          </Field>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Factores psicosociales (Yellow Flags)"
+        description="Los factores psicosociales predicen cronicidad mejor que los hallazgos estructurales."
+      >
+        <div className="grid gap-4">
+          <div className="grid gap-3">
+            <CheckboxField
+              id="kinesophobia"
+              label="Kinesiofobia — miedo al movimiento o a re-lesionarse"
+              checked={watch("kinesophobia")}
+              onChange={(v) => setValue("kinesophobia", v)}
+            />
+            <CheckboxField
+              id="workRelated"
+              label="Relacionado con el trabajo (lesión laboral o estrés ocupacional)"
+              checked={watch("workRelated")}
+              onChange={(v) => setValue("workRelated", v)}
+            />
+            <CheckboxField
+              id="compensationClaim"
+              label="Reclamo indemnizatorio activo (ART, seguro, litigio)"
+              checked={watch("compensationClaim")}
+              onChange={(v) => setValue("compensationClaim", v)}
+            />
+          </div>
+          <Field
+            label="Observaciones psicosociales"
+            error={errors.yellowFlags?.message}
+          >
+            <Textarea
+              {...register("yellowFlags")}
+              placeholder="Catastrofización, estado emocional, red de apoyo, situación laboral, etc."
+            />
+          </Field>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
         title="Factores y antecedentes"
         description="Elementos que agravan o alivian, historial y seguridad clínica."
       >
@@ -163,6 +282,40 @@ export function InitialAssessmentForm({
           <Field label="Banderas rojas" error={errors.redFlags?.message}>
             <Textarea {...register("redFlags")} />
           </Field>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Actividad y demanda funcional"
+        description="Deporte, trabajo y sueño — determinan los objetivos terapéuticos."
+      >
+        <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Deporte o actividad física" error={errors.sportActivity?.message}>
+              <Input
+                {...register("sportActivity")}
+                placeholder="Fútbol, running, natación…"
+              />
+            </Field>
+            <Field label="Nivel de actividad" error={errors.sportLevel?.message}>
+              <Input
+                {...register("sportLevel")}
+                placeholder="Recreativo, amateur, competitivo, élite"
+              />
+            </Field>
+          </div>
+          <Field label="Demanda postural laboral" error={errors.workPosture?.message}>
+            <Input
+              {...register("workPosture")}
+              placeholder="Trabajo de escritorio, de pie, carga manual, conducción…"
+            />
+          </Field>
+          <CheckboxField
+            id="sleepImpact"
+            label="El dolor afecta la calidad del sueño"
+            checked={watch("sleepImpact")}
+            onChange={(v) => setValue("sleepImpact", v)}
+          />
         </div>
       </CollapsibleSection>
 
@@ -211,6 +364,31 @@ function Field({
   );
 }
 
+function CheckboxField({
+  id,
+  label,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label htmlFor={id} className="flex cursor-pointer items-center gap-2 text-sm">
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 rounded border-gray-300 accent-primary"
+      />
+      {label}
+    </label>
+  );
+}
+
 function formatDate(value?: string | null) {
   return value ? value.slice(0, 10) : "";
 }
@@ -245,6 +423,20 @@ function getDefaultValues(initialAssessment?: InitialAssessment | null): FormVal
     redFlags: initialAssessment?.redFlags ?? "",
     patientGoals: initialAssessment?.patientGoals ?? "",
     limitedActivities: initialAssessment?.limitedActivities ?? "",
+    painMorning: initialAssessment?.painMorning ?? "",
+    painDayTime: initialAssessment?.painDayTime ?? "",
+    painNight: initialAssessment?.painNight ?? "",
+    irritability: initialAssessment?.irritability ?? "",
+
+    irritabilityNotes: initialAssessment?.irritabilityNotes ?? "",
+    yellowFlags: initialAssessment?.yellowFlags ?? "",
+    kinesophobia: initialAssessment?.kinesophobia ?? false,
+    workRelated: initialAssessment?.workRelated ?? false,
+    compensationClaim: initialAssessment?.compensationClaim ?? false,
+    sportActivity: initialAssessment?.sportActivity ?? "",
+    sportLevel: initialAssessment?.sportLevel ?? "",
+    workPosture: initialAssessment?.workPosture ?? "",
+    sleepImpact: initialAssessment?.sleepImpact ?? false,
   };
 }
 
@@ -279,5 +471,19 @@ function cleanInput(values: FormValues): InitialAssessmentInput {
     redFlags: emptyToUndefined(values.redFlags),
     patientGoals: emptyToUndefined(values.patientGoals),
     limitedActivities: emptyToUndefined(values.limitedActivities),
+    painMorning: emptyToUndefined(values.painMorning),
+    painDayTime: emptyToUndefined(values.painDayTime),
+    painNight: emptyToUndefined(values.painNight),
+    irritability:
+      values.irritability !== "" ? (values.irritability as IrritabilityLevel) : undefined,
+    irritabilityNotes: emptyToUndefined(values.irritabilityNotes),
+    yellowFlags: emptyToUndefined(values.yellowFlags),
+    kinesophobia: values.kinesophobia || undefined,
+    workRelated: values.workRelated || undefined,
+    compensationClaim: values.compensationClaim || undefined,
+    sportActivity: emptyToUndefined(values.sportActivity),
+    sportLevel: emptyToUndefined(values.sportLevel),
+    workPosture: emptyToUndefined(values.workPosture),
+    sleepImpact: values.sleepImpact || undefined,
   };
 }

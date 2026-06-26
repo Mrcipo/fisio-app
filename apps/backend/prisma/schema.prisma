@@ -61,6 +61,12 @@ enum ClinicalDecision {
   REFER
 }
 
+enum IrritabilityLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 enum MetricType {
   PAIN
   ROM
@@ -160,6 +166,19 @@ model InitialAssessment {
   redFlags              String?
   patientGoals          String?
   limitedActivities     String?
+  painMorning           String?
+  painDayTime           String?
+  painNight             String?
+  irritability          IrritabilityLevel?
+  irritabilityNotes     String?
+  yellowFlags           String?
+  kinesophobia          Boolean?
+  workRelated           Boolean?
+  compensationClaim     Boolean?
+  sportActivity         String?
+  sportLevel            String?
+  workPosture           String?
+  sleepImpact           Boolean?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   patient               Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)

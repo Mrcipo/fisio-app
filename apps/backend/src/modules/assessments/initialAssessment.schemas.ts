@@ -3,6 +3,8 @@ import { z } from "zod";
 const optionalText = z.string().trim().min(1).optional();
 const painScale = z.number().int().min(0).max(10);
 
+export const IrritabilityLevelSchema = z.enum(["LOW", "MEDIUM", "HIGH"]);
+
 export const patientIdParamSchema = z.object({
   patientId: z.string().trim().min(1),
 });
@@ -27,6 +29,23 @@ export const createInitialAssessmentSchema = z.object({
   redFlags: optionalText,
   patientGoals: optionalText,
   limitedActivities: optionalText,
+  // 1.1 — Comportamiento del dolor en 24 horas
+  painMorning: optionalText,
+  painDayTime: optionalText,
+  painNight: optionalText,
+  // 1.2 — Irritabilidad del cuadro
+  irritability: IrritabilityLevelSchema.optional(),
+  irritabilityNotes: optionalText,
+  // 1.3 — Yellow flags
+  yellowFlags: optionalText,
+  kinesophobia: z.boolean().optional(),
+  workRelated: z.boolean().optional(),
+  compensationClaim: z.boolean().optional(),
+  // 1.5 — Demanda funcional y deportiva
+  sportActivity: optionalText,
+  sportLevel: optionalText,
+  workPosture: optionalText,
+  sleepImpact: z.boolean().optional(),
 });
 
 export const updateInitialAssessmentSchema = createInitialAssessmentSchema
