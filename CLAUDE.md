@@ -63,3 +63,7 @@ npm run dev --workspace=apps/frontend
 - No modificar archivos en `prisma/migrations/` manualmente
 - No usar `document.write` ni `window.open` para generar PDFs
 - No hardcodear IDs de usuario — siempre usar `req.user` del middleware
+
+## Documentación clínica
+- `docs/analisis-clinico-v1.md` — Análisis clínico MSK del estado actual de la app
+- `docs/plan-accion-v3-clinico.md` — Plan de acción v3 con todas las mejoras clínicas planificadas. Consultarlo antes de implementar cualquier módulo clínico.
