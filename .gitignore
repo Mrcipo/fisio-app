@@ -10,3 +10,7 @@ coverage
 apps/backend/generated
 apps/backend/prisma/dev.db
 *.log
+
+# Build and test caches
+.jest-cache
+*.tsbuildinfo

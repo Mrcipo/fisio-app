@@ -1,5 +1,16 @@
 # Fisio MSK — Clinical Management App
 
+🌐 **English** · [Español](README.es.md)
+
+[![CI](https://github.com/Mrcipo/fisio-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Mrcipo/fisio-app/actions/workflows/ci.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![Express](https://img.shields.io/badge/Express-API-000000?logo=express&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
+![Jest](https://img.shields.io/badge/Tests-Jest-C21325?logo=jest&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 A full-stack web application for musculoskeletal physiotherapists to manage patients, clinical assessments, rehabilitation plans, treatment sessions and functional progress tracking.
 
 Built as a real-world project to solve genuine documentation needs in clinical MSK practice.
@@ -76,7 +87,7 @@ fisio-app/
 │   └── frontend/         → Next.js application
 ├── docker-compose.yml    → Local database
 ├── CLAUDE.md             → AI agent context file
-└── docs/                 → Clinical analysis and roadmap
+└── docs/                 → Clinical analysis, roadmap and project context
 ```
 
 ### Backend architecture
@@ -233,6 +244,8 @@ cd apps/backend && npm test
 # 61 passing
 ```
 
+The same suite runs on every push through GitHub Actions, together with a production build of the frontend.
+
 ---
 
 ## Getting Started
@@ -358,4 +371,8 @@ The project has an active clinical development roadmap documented in `docs/plan-
 - Multi-metric progress charts
 
 ---
+
+## License
+
+[MIT](LICENSE)
 
