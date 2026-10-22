@@ -6,7 +6,7 @@
 - **Frontend:** Next.js 15 + TypeScript + Tailwind CSS + ShadCN (puerto 3000)
 - **Auth:** JWT via cookie httpOnly (`token`), middleware en `require-auth.ts`
 - **ORM:** Prisma — única capa de acceso a datos
-- **Tests:** Jest + Supertest (backend), 59 tests verdes
+- **Tests:** Jest + Supertest (backend), 61 tests verdes
 
 ## Estructura
 ```

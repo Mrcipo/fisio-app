@@ -23,6 +23,7 @@ Built as a real-world project to solve genuine documentation needs in clinical M
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Clinical Domain](#clinical-domain)
 - [Security](#security)
 - [Testing](#testing)
@@ -177,6 +178,23 @@ src/
 - Desktop: persistent sidebar
 - Below 900px: collapsible drawer with overlay
 - Hamburger menu with smooth transition
+
+---
+
+## Screenshots
+
+Captured from a local production build with the synthetic patients created by the seed script
+(`src/scripts/seed.ts`); no real patient data.
+
+| Dashboard | Patients |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Patient list](docs/screenshots/patients.png) |
+
+| Patient record | Progress |
+|---|---|
+| ![Patient record](docs/screenshots/patient-detail.png) | ![Progress charts](docs/screenshots/progress.png) |
+
+<img src="docs/screenshots/mobile-patients.png" alt="Patient list on mobile" width="260">
 
 ---
 

@@ -23,6 +23,7 @@ Construida como un proyecto real para resolver necesidades genuinas de documenta
 - [Stack tecnológico](#stack-tecnológico)
 - [Arquitectura](#arquitectura)
 - [Funcionalidades](#funcionalidades)
+- [Capturas](#capturas)
 - [Dominio clínico](#dominio-clínico)
 - [Seguridad](#seguridad)
 - [Testing](#testing)
@@ -178,6 +179,23 @@ src/
 - Escritorio: sidebar persistente
 - Por debajo de 900 px: drawer colapsable con overlay
 - Menú hamburguesa con transición suave
+
+---
+
+## Capturas
+
+Tomadas de un build de producción local con los pacientes sintéticos que crea el script de seed
+(`src/scripts/seed.ts`); no hay datos de pacientes reales.
+
+| Dashboard | Pacientes |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Lista de pacientes](docs/screenshots/patients.png) |
+
+| Ficha del paciente | Progreso |
+|---|---|
+| ![Ficha del paciente](docs/screenshots/patient-detail.png) | ![Gráficos de progreso](docs/screenshots/progress.png) |
+
+<img src="docs/screenshots/mobile-patients.png" alt="Lista de pacientes en mobile" width="260">
 
 ---
 
